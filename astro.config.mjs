@@ -9,6 +9,9 @@ import vercel from '@astrojs/vercel';
 export default defineConfig({
   output: 'server',
 
+  // Allow same-site form POSTs on Vercel (origin check can fail behind proxies)
+  security: { checkOrigin: false },
+
   vite: {
     plugins: [tailwindcss()]
   },
