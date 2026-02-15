@@ -2,11 +2,19 @@
 import Layout from '../layouts/Layout.astro';
 import { getSupabase } from '../lib/supabase';
 
-const supabase = getSupabase();
-const { data: posts = [] } = await supabase
-  .from('posts')
-  .select('id, title, slug, created_at')
-  .order('created_at', { ascending: false });
+let posts: Array<{ id: string; title: string; slug: string; created_at: string }> = [];
+let loadError: string | null = null;
+try {
+  const supabase = getSupabase();
+  const { data = [], error } = await supabase
+    .from('posts')
+    .select('id, title, slug, created_at')
+    .order('created_at', { ascending: false });
+  if (error) loadError = error.message;
+  else posts = data;
+} catch (e) {
+  loadError = e instanceof Error ? e.message : 'Failed to load posts.';
+}
 ---
 
 <Layout>
@@ -19,9 +27,17 @@ const { data: posts = [] } = await supabase
 
     <section>
       <h2 class="text-lg font-medium mb-3">Posts</h2>
-      {posts.length === 0 ? (
+      {loadError && (
+        <p class="mb-4 p-3 rounded-md bg-destructive/10 text-destructive border border-destructive/20 text-sm" role="alert">
+          {loadError}
+          {loadError.includes('SUPABASE') && (
+            <span class="block mt-1">Add SUPABASE_URL and SUPABASE_ANON_KEY in Vercel → Project → Settings → Environment Variables, then redeploy.</span>
+          )}
+        </p>
+      )}
+      {posts.length === 0 && !loadError ? (
         <p class="text-muted-foreground">No posts yet. <a href="/admin" class="underline">Create one</a>.</p>
-      ) : (
+      ) : posts.length > 0 ? (
         <ul class="space-y-2">
           {posts.map((post) => (
             <li>
@@ -31,7 +47,7 @@ const { data: posts = [] } = await supabase
             </li>
           ))}
         </ul>
-      )}
+      ) : null}
     </section>
   </main>
 </Layout>

@@ -5,14 +5,19 @@ import { getSupabase } from '../../lib/supabase';
 const slug = Astro.params.slug;
 if (!slug) return Astro.redirect('/');
 
-const supabase = getSupabase();
-const { data: post, error } = await supabase
-  .from('posts')
-  .select('id, title, slug, content, image_url, created_at')
-  .eq('slug', slug)
-  .single();
-
-if (error || !post) return Astro.redirect('/');
+let post: { id: string; title: string; slug: string; content: string; image_url: string | null; created_at: string } | null = null;
+try {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from('posts')
+    .select('id, title, slug, content, image_url, created_at')
+    .eq('slug', slug)
+    .single();
+  if (!error && data) post = data;
+} catch {
+  // env missing or Supabase error
+}
+if (!post) return Astro.redirect('/');
 ---
 
 <Layout>
