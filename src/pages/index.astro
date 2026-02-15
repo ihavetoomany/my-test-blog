@@ -1,10 +1,37 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { getSupabase } from '../lib/supabase';
+
+const supabase = getSupabase();
+const { data: posts = [] } = await supabase
+  .from('posts')
+  .select('id, title, slug, created_at')
+  .order('created_at', { ascending: false });
 ---
 
 <Layout>
-  <main class="min-h-screen bg-background text-foreground p-8">
-    <h1 class="text-3xl font-semibold">Test Blog</h1>
-    <p class="mt-2 text-muted-foreground">Astro + Tailwind + shadcn/ui + Supabase. Run the SQL in <code class="rounded bg-muted px-1">supabase-schema.sql</code> in your Supabase SQL Editor to create the <code class="rounded bg-muted px-1">posts</code> table.</p>
+  <main class="min-h-screen bg-background text-foreground p-8 max-w-2xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-3xl font-semibold">Test Blog</h1>
+      <a href="/admin" class="text-sm text-muted-foreground hover:text-foreground underline">Admin</a>
+    </div>
+    <p class="mb-6 text-muted-foreground">Astro + Tailwind + shadcn/ui + Supabase.</p>
+
+    <section>
+      <h2 class="text-lg font-medium mb-3">Posts</h2>
+      {posts.length === 0 ? (
+        <p class="text-muted-foreground">No posts yet. <a href="/admin" class="underline">Create one</a>.</p>
+      ) : (
+        <ul class="space-y-2">
+          {posts.map((post) => (
+            <li>
+              <a href={`/posts/${post.slug}`} class="text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded">
+                {post.title}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   </main>
 </Layout>
